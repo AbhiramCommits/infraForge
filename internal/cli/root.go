@@ -32,6 +32,8 @@ type Options struct {
 	Logger *slog.Logger
 	// Stderr receives log output; defaults to os.Stderr.
 	Stderr io.Writer
+	// ReportsDir is where run reports are written; defaults to "reports".
+	ReportsDir string
 }
 
 // Execute runs the root command and returns a process exit code.
@@ -56,7 +58,7 @@ func newRootCommand(opts *Options) *cobra.Command {
 		Short:         "Provision infrastructure with Ansible and cgroup v2 limits",
 		SilenceUsage:  true,
 		SilenceErrors: true,
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 			return initializeRun(opts)
 		},
 	}
@@ -64,6 +66,7 @@ func newRootCommand(opts *Options) *cobra.Command {
 	pf := cmd.PersistentFlags()
 	pf.StringVar(&opts.Inventory, "inventory", defaultInventory, "path to the Ansible inventory")
 	pf.StringVar(&opts.Config, "config", defaultConfig, "path to the infraforge configuration file")
+	pf.StringVar(&opts.ReportsDir, "reports-dir", "reports", "directory for run reports")
 	pf.BoolVar(&opts.DryRun, "dry-run", false, "print planned actions without executing them")
 	pf.StringVar(&opts.LogFormat, "log-format", "text", "log output format: text or json")
 

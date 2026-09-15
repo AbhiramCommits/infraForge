@@ -45,6 +45,8 @@ type CPUStats struct {
 type MemoryStats struct {
 	// Current is the current memory usage in bytes (memory.current).
 	Current int64
+	// Peak is the highest observed usage in bytes (memory.peak).
+	Peak int64
 	// Events maps memory.events counters (e.g. "oom_kill", "high") to their
 	// values.
 	Events map[string]int64

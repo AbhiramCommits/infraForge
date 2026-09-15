@@ -2,6 +2,7 @@
 - name: Build node container images
   hosts: localhost
   gather_facts: false
+  tags: [docker, image]
   vars:
     node_images: "{{ groups['nodes'] | map('extract', hostvars, 'node_image') | unique }}"
   tasks:
@@ -11,7 +12,7 @@
         source: build
         state: present
         build:
-          path: "{{ playbook_dir }}/.."
+          path: "{{ (playbook_dir + '/../..') | realpath }}"
           dockerfile: deploy/Dockerfile.node
           args:
             BASE_IMAGE: "{{ item }}"
@@ -20,8 +21,9 @@
 - name: Ensure node containers are running
   hosts: localhost
   gather_facts: false
+  tags: [docker, container]
   tasks:
-    - name: Ensure container {{ item }} is running
+    - name: Ensure node container is running for {{ item }}
       community.docker.docker_container:
         name: "{{ item }}"
         image: "infraforge/node:{{ hostvars[item].node_image | regex_replace('[:/]', '-') }}"

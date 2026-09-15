@@ -63,7 +63,7 @@ func TestLogsCarryRunID(t *testing.T) {
 			var buf bytes.Buffer
 			opts := &Options{Stderr: &buf}
 			cmd := newRootCommand(opts)
-			cmd.SetArgs([]string{"limit", "--dry-run", "--log-format", tc.format})
+			cmd.SetArgs([]string{"report", "--dry-run", "--log-format", tc.format})
 			if err := cmd.Execute(); err != nil {
 				t.Fatalf("Execute() error = %v", err)
 			}
@@ -78,7 +78,7 @@ func TestLogsCarryRunID(t *testing.T) {
 func TestInvalidLogFormat(t *testing.T) {
 	opts := &Options{Stderr: &bytes.Buffer{}}
 	cmd := newRootCommand(opts)
-	cmd.SetArgs([]string{"limit", "--log-format", "yaml"})
+	cmd.SetArgs([]string{"report", "--log-format", "yaml"})
 	err := cmd.Execute()
 	if err == nil {
 		t.Fatal("Execute() succeeded, want error for invalid --log-format")

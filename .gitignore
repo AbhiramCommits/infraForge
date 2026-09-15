@@ -4,6 +4,12 @@
 # Generated files (written by `infraforge provision`)
 /deploy/inventory.yml
 
+# Run reports (written by `infraforge provision` and `infraforge limit`)
+/reports/
+
+# Ansible runtime artifacts
+/.ansible/
+
 # Go
 *.test
 *.out

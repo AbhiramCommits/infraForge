@@ -1,14 +1,14 @@
 ---
 - name: Install base packages
   ansible.builtin.apt:
-    name: "{{ node_packages }}"
+    name: "{{ base_node_packages }}"
     state: present
     update_cache: true
     cache_valid_time: 3600
 
 - name: Ensure the infraforge service user exists
   ansible.builtin.user:
-    name: "{{ node_user }}"
+    name: "{{ base_node_user }}"
     shell: /bin/bash
     create_home: true
     state: present

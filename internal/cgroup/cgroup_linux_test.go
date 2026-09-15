@@ -97,6 +97,9 @@ func TestAddPIDAndStats(t *testing.T) {
 	if mem.Current <= 0 {
 		t.Errorf("memory.current = %d, want > 0", mem.Current)
 	}
+	if mem.Peak < mem.Current {
+		t.Errorf("memory.peak = %d, want >= current %d", mem.Peak, mem.Current)
+	}
 	if _, ok := mem.Events["oom_kill"]; !ok {
 		t.Errorf("memory.events missing oom_kill: %v", mem.Events)
 	}

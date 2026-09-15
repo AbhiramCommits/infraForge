@@ -4,9 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
+	"path/filepath"
+	"sort"
+	"time"
 
 	"github.com/infraforge/infraforge/internal/ansible"
 	"github.com/infraforge/infraforge/internal/config"
+	"github.com/infraforge/infraforge/internal/report"
 	"github.com/spf13/cobra"
 )
 
@@ -19,13 +24,14 @@ func newProvisionCommand(opts *Options) *cobra.Command {
 		Short: "Provision hosts using Ansible",
 		Long:  "Reads the config file, generates the Ansible inventory, and runs the site playbook to bring each host into the desired state.",
 		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return runProvision(cmd.Context(), opts)
 		},
 	}
 }
 
 func runProvision(ctx context.Context, opts *Options) error {
+	started := time.Now()
 	logger := opts.Logger.With("command", "provision")
 
 	cfg, err := config.Load(opts.Config)
@@ -47,15 +53,18 @@ func runProvision(ctx context.Context, opts *Options) error {
 		DryRun:    opts.DryRun,
 		Logger:    logger,
 	}
-	result, err := runner.Run(ctx)
-	if err != nil {
+	result, runErr := runner.Run(ctx)
+	if result != nil {
+		saveProvisionReport(opts, started, result, logger)
+	}
+	if runErr != nil {
 		if result != nil {
 			logger.Error("provisioning completed with problems",
 				"hosts", len(result.Hosts),
 				"changed_tasks", len(result.ChangedTasks),
 			)
 		}
-		return err
+		return runErr
 	}
 	logger.Info("provisioning complete",
 		"hosts", len(result.Hosts),
@@ -63,4 +72,43 @@ func runProvision(ctx context.Context, opts *Options) error {
 		"changed_task_names", result.ChangedTasks,
 	)
 	return nil
+}
+
+func saveProvisionReport(opts *Options, started time.Time, result *ansible.Result, logger *slog.Logger) {
+	hosts := make([]report.HostResult, 0, len(result.Hosts))
+	for name, stats := range result.Hosts {
+		hosts = append(hosts, report.HostResult{
+			Name:        name,
+			OK:          stats.OK,
+			Changed:     stats.Changed,
+			Unreachable: stats.Unreachable,
+			Failed:      stats.Failed,
+		})
+	}
+	sort.Slice(hosts, func(i, j int) bool { return hosts[i].Name < hosts[j].Name })
+
+	dir := reportsDir(opts)
+	rec := &report.Report{
+		RunID:           opts.RunID,
+		Kind:            report.KindProvision,
+		StartedAt:       started,
+		DurationSeconds: time.Since(started).Seconds(),
+		Provision: &report.Provision{
+			Hosts:        hosts,
+			ChangedTasks: result.ChangedTasks,
+		},
+	}
+	if err := report.Save(dir, rec); err != nil {
+		logger.Warn("failed to write report", "error", err)
+		return
+	}
+	logger.Info("report written", "path", filepath.Join(dir, opts.RunID+".json"))
+}
+
+// reportsDir returns the directory run reports are written to.
+func reportsDir(opts *Options) string {
+	if opts.ReportsDir != "" {
+		return opts.ReportsDir
+	}
+	return "reports"
 }

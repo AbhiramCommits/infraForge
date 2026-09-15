@@ -21,7 +21,7 @@
     owner: root
     group: root
     mode: "0644"
-  register: burner_conf
+  notify: Restart burner
 
 - name: Ensure supervisord is running
   ansible.builtin.service:
@@ -33,9 +33,3 @@
   community.general.supervisorctl:
     name: infraforge-burn
     state: present
-
-- name: Restart the burner after configuration changes
-  community.general.supervisorctl:
-    name: infraforge-burn
-    state: restarted
-  when: burner_conf.changed

@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/infraforge/infraforge/internal/report"
 )
 
 const provisionTestConfig = `hosts:
@@ -58,10 +60,11 @@ func TestProvisionEndToEnd(t *testing.T) {
 				t.Fatal(err)
 			}
 			inventoryPath := filepath.Join(dir, "deploy", "inventory.yml")
+			reportsDir := filepath.Join(dir, "reports")
 
 			opts := &Options{Stderr: io.Discard}
 			cmd := newRootCommand(opts)
-			cmd.SetArgs([]string{"provision", "--config", configPath, "--inventory", inventoryPath})
+			cmd.SetArgs([]string{"provision", "--config", configPath, "--inventory", inventoryPath, "--reports-dir", reportsDir})
 			err := cmd.Execute()
 
 			if tc.wantErr == "" {
@@ -83,6 +86,22 @@ func TestProvisionEndToEnd(t *testing.T) {
 			}
 			if !strings.Contains(string(data), "web-01") || !strings.Contains(string(data), "2222") {
 				t.Errorf("generated inventory missing expected content:\n%s", data)
+			}
+
+			if tc.wantErr == "" || tc.wantErr == "unreachable" {
+				reports, err := report.LoadAll(reportsDir)
+				if err != nil {
+					t.Fatalf("load reports: %v", err)
+				}
+				if len(reports) != 1 {
+					t.Fatalf("got %d reports, want 1", len(reports))
+				}
+				if reports[0].Kind != report.KindProvision {
+					t.Errorf("report kind = %q, want provision", reports[0].Kind)
+				}
+				if len(reports[0].Provision.Hosts) == 0 {
+					t.Error("report has no hosts")
+				}
 			}
 		})
 	}

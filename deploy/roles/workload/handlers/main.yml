@@ -1,0 +1,5 @@
+---
+- name: Restart burner
+  community.general.supervisorctl:
+    name: infraforge-burn
+    state: restarted

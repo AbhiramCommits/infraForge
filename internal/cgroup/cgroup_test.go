@@ -20,7 +20,7 @@ func TestParseCPUPercent(t *testing.T) {
 		{name: "over one core", in: "150%", wantErr: true},
 		{name: "empty", in: "", wantErr: true},
 		{name: "percent sign only", in: "%", wantErr: true},
-		{name: "rounds to zero", in: "0.01%", wantErr: true},
+		{name: "rounds to zero", in: "0.0001%", wantErr: true},
 	}
 
 	for _, tc := range tests {

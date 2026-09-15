@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"log/slog"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/infraforge/infraforge/internal/cgroup"
 	"github.com/infraforge/infraforge/internal/config"
+	"github.com/infraforge/infraforge/internal/report"
 	"github.com/spf13/cobra"
 )
 
@@ -31,7 +33,7 @@ func newLimitCommand(opts *Options) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "limit [flags] -- <command...>",
 		Short: "Run a command inside a cgroup v2 with resource limits",
-		Long: "Creates a cgroup under /sys/fs/cgroup/infraforge/<name> with the given cpu.max, memory.max/memory.high, and pids.max limits, forks <command...> into it, samples memory.events and cpu.stat while it runs, and reports whether the command was throttled or OOM-killed.",
+		Long:  "Creates a cgroup under /sys/fs/cgroup/infraforge/<name> with the given cpu.max, memory.max/memory.high, and pids.max limits, forks <command...> into it, samples memory.events and cpu.stat while it runs, and reports whether the command was throttled or OOM-killed.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runLimit(cmd.Context(), cmd, opts, flags, args)
@@ -46,6 +48,7 @@ func newLimitCommand(opts *Options) *cobra.Command {
 }
 
 func runLimit(ctx context.Context, cmd *cobra.Command, opts *Options, flags limitFlags, args []string) error {
+	started := time.Now()
 	logger := opts.Logger.With("command", "limit", "cgroup", flags.name)
 	out := cmd.OutOrStdout()
 
@@ -105,10 +108,14 @@ func runLimit(ctx context.Context, cmd *cobra.Command, opts *Options, flags limi
 	oomKills := int64(0)
 	highEvents := int64(0)
 	current := int64(0)
+	peak := sampler.peakCurrent()
 	if memErr == nil {
 		current = mem.Current
 		oomKills = mem.Events["oom_kill"]
 		highEvents = mem.Events["high"]
+		if mem.Peak > peak {
+			peak = mem.Peak
+		}
 	} else {
 		logger.Warn("failed to read memory stats", "error", memErr)
 	}
@@ -137,7 +144,7 @@ func runLimit(ctx context.Context, cmd *cobra.Command, opts *Options, flags limi
 	fmt.Fprintf(out, "  exit:     %s\n", exitLine)
 	fmt.Fprintf(out, "  cpu:      throttled_usec=%d\n", throttled)
 	fmt.Fprintf(out, "  memory:   current=%d peak=%d oom_kill=%d high_events=%d\n",
-		current, sampler.peakCurrent(), oomKills, highEvents)
+		current, peak, oomKills, highEvents)
 	fmt.Fprintf(out, "  verdict:  %s\n", verdict)
 
 	logger.Info("limit complete",
@@ -145,8 +152,34 @@ func runLimit(ctx context.Context, cmd *cobra.Command, opts *Options, flags limi
 		"throttled_usec", throttled,
 		"oom_kill", oomKills,
 		"memory_current", current,
-		"memory_peak", sampler.peakCurrent(),
+		"memory_peak", peak,
 	)
+
+	dir := reportsDir(opts)
+	rec := &report.Report{
+		RunID:           opts.RunID,
+		Kind:            report.KindLimit,
+		StartedAt:       started,
+		DurationSeconds: time.Since(started).Seconds(),
+		Limit: &report.Limit{
+			Cgroup: flags.name,
+			Limits: report.Limits{
+				CPUMax:    limits.CPUMax,
+				MemoryMax: limits.MemoryMax,
+				PIDsMax:   limits.PIDsMax,
+			},
+			ThrottledUsec: throttled,
+			OOMKills:      oomKills,
+			HighEvents:    highEvents,
+			PeakMemory:    peak,
+			Verdict:       verdict,
+		},
+	}
+	if err := report.Save(dir, rec); err != nil {
+		logger.Warn("failed to write report", "error", err)
+	} else {
+		logger.Info("report written", "path", filepath.Join(dir, opts.RunID+".json"))
+	}
 
 	switch {
 	case oomKills > 0:

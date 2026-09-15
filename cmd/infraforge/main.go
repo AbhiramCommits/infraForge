@@ -1,3 +1,4 @@
+// Command infraforge is the infrastructure provisioning CLI.
 package main
 
 import (

@@ -42,6 +42,13 @@ func (c *Controller) Create(name string, lim Limits) error {
 			high = lim.MemoryMax
 		}
 		writes = append(writes, write{"memory.high", strconv.FormatInt(high, 10)})
+		// Without a swap cap the kernel swaps pages out instead of
+		// enforcing memory.max, so forbid swap whenever a memory limit
+		// is applied. Missing memory.swap.max (kernels without swap
+		// accounting) is tolerated.
+		if err := writeFile(filepath.Join(dir, "memory.swap.max"), "0"); err != nil && !os.IsNotExist(err) {
+			return fmt.Errorf("write memory.swap.max to cgroup %q: %w", dir, err)
+		}
 	}
 	if lim.PIDsMax > 0 {
 		writes = append(writes, write{"pids.max", strconv.FormatInt(lim.PIDsMax, 10)})
@@ -71,7 +78,8 @@ func (c *Controller) Delete(name string) error {
 	return nil
 }
 
-// MemoryStats reads memory.current and memory.events for the cgroup.
+// MemoryStats reads memory.current, memory.peak, and memory.events for the
+// cgroup.
 func (c *Controller) MemoryStats(name string) (MemoryStats, error) {
 	var stats MemoryStats
 	dir := c.Path(name)
@@ -82,6 +90,9 @@ func (c *Controller) MemoryStats(name string) (MemoryStats, error) {
 	stats.Current, err = parseIntFile(current)
 	if err != nil {
 		return stats, fmt.Errorf("parse memory.current: %w", err)
+	}
+	if peak, err := os.ReadFile(filepath.Join(dir, "memory.peak")); err == nil {
+		stats.Peak, _ = parseIntFile(peak)
 	}
 	events, err := os.ReadFile(filepath.Join(dir, "memory.events"))
 	if err != nil {
@@ -115,7 +126,7 @@ func writeFile(path, value string) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	if _, err := f.WriteString(value); err != nil {
 		return err
 	}
