@@ -9,6 +9,7 @@ package integration
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -220,6 +221,13 @@ func TestLimitOOMKill(t *testing.T) {
 	)
 	if err == nil {
 		t.Fatalf("limit succeeded, want OOM kill:\n%s", out)
+	}
+	var exitErr *exec.ExitError
+	if !errors.As(err, &exitErr) {
+		t.Fatalf("limit failed with %v, want exit error", err)
+	}
+	if exitErr.ExitCode() != 3 {
+		t.Fatalf("exit code = %d, want 3 (limit violation):\n%s", exitErr.ExitCode(), out)
 	}
 	if !strings.Contains(out, "verdict:  oom-killed") {
 		t.Fatalf("output missing oom-killed verdict:\n%s", out)

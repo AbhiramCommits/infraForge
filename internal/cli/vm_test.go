@@ -45,6 +45,7 @@ func TestVMStartMissingConfig(t *testing.T) {
 	if !strings.Contains(err.Error(), "load config") {
 		t.Errorf("error = %q, want load config", err)
 	}
+	assertExitCode(t, err, ExitConfigError)
 }
 
 func TestVMStartHostNotFound(t *testing.T) {
@@ -64,6 +65,7 @@ func TestVMStartHostNotFound(t *testing.T) {
 	if !strings.Contains(err.Error(), "not found in config") {
 		t.Errorf("error = %q, want not found in config", err)
 	}
+	assertExitCode(t, err, ExitConfigError)
 }
 
 func TestVMHelp(t *testing.T) {

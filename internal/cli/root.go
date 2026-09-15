@@ -36,26 +36,31 @@ type Options struct {
 	ReportsDir string
 }
 
-// Execute runs the root command and returns a process exit code.
+// Execute runs the root command and returns a process exit code:
+// 0 ok, 1 provision failure, 2 config error, 3 limit violation.
 func Execute() int {
 	opts := &Options{}
 	cmd := newRootCommand(opts)
 	if err := cmd.Execute(); err != nil {
+		code := exitCode(err)
 		if opts.Logger != nil {
-			opts.Logger.Error("command failed", "error", err)
+			opts.Logger.Error("command failed", "error", err, "exit_code", code)
 		} else {
 			fmt.Fprintf(os.Stderr, "infraforge: %v\n", err)
 		}
-		return 1
+		return code
 	}
-	return 0
+	return ExitOK
 }
 
 // newRootCommand builds the root command with global flags and subcommands.
 func newRootCommand(opts *Options) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:           "infraforge",
-		Short:         "Provision infrastructure with Ansible and cgroup v2 limits",
+		Use:   "infraforge",
+		Short: "Provision infrastructure with Ansible and cgroup v2 limits",
+		Long: `infraforge provisions multi-node infrastructure with idempotent
+Ansible playbooks and enforces per-workload CPU and memory limits with
+Linux cgroups v2.`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {

@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 	"path/filepath"
@@ -36,10 +35,10 @@ func runProvision(ctx context.Context, opts *Options) error {
 
 	cfg, err := config.Load(opts.Config)
 	if err != nil {
-		return fmt.Errorf("load config: %w", err)
+		return exitErrorf(ExitConfigError, "load config: %w", err)
 	}
 	if len(cfg.Hosts) == 0 {
-		return errors.New("config defines no hosts; nothing to provision")
+		return exitErrorf(ExitConfigError, "config defines no hosts; nothing to provision")
 	}
 
 	if err := ansible.GenerateInventory(cfg, opts.Inventory); err != nil {

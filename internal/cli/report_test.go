@@ -138,4 +138,5 @@ func TestReportInvalidFormat(t *testing.T) {
 	if !strings.Contains(err.Error(), "--format") {
 		t.Errorf("error = %q, want it to mention --format", err)
 	}
+	assertExitCode(t, err, ExitConfigError)
 }

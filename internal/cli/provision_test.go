@@ -78,6 +78,9 @@ func TestProvisionEndToEnd(t *testing.T) {
 				if !strings.Contains(err.Error(), tc.wantErr) {
 					t.Fatalf("Execute() error = %q, want it to contain %q", err, tc.wantErr)
 				}
+				if tc.wantErr == "unreachable" {
+					assertExitCode(t, err, ExitProvisionFailure)
+				}
 			}
 
 			data, err := os.ReadFile(inventoryPath)
@@ -140,6 +143,15 @@ func TestProvisionErrors(t *testing.T) {
 			if !strings.Contains(err.Error(), tc.wantErr) {
 				t.Fatalf("Execute() error = %q, want it to contain %q", err, tc.wantErr)
 			}
+			assertExitCode(t, err, ExitConfigError)
 		})
+	}
+}
+
+// assertExitCode fails unless err carries the wanted exit code.
+func assertExitCode(t *testing.T, err error, want int) {
+	t.Helper()
+	if got := exitCode(err); got != want {
+		t.Fatalf("exit code = %d (err = %v), want %d", got, err, want)
 	}
 }

@@ -6,7 +6,7 @@
   vars:
     node_images: "{{ groups['nodes'] | map('extract', hostvars, 'node_image') | unique }}"
   tasks:
-    - name: Build the node image for {{ item }}
+    - name: Build the node container image
       community.docker.docker_image:
         name: "infraforge/node:{{ item | regex_replace('[:/]', '-') }}"
         source: build
@@ -23,7 +23,7 @@
   gather_facts: false
   tags: [docker, container]
   tasks:
-    - name: Ensure node container is running for {{ item }}
+    - name: Ensure node containers are running
       community.docker.docker_container:
         name: "{{ item }}"
         image: "infraforge/node:{{ hostvars[item].node_image | regex_replace('[:/]', '-') }}"

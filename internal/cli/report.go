@@ -31,7 +31,7 @@ func runReport(cmd *cobra.Command, opts *Options, format string) error {
 	reportsDir := reportsDir(opts)
 
 	if format != "table" && format != "json" {
-		return fmt.Errorf("invalid --format %q: must be \"table\" or \"json\"", format)
+		return exitErrorf(ExitConfigError, "invalid --format %q: must be \"table\" or \"json\"", format)
 	}
 
 	reports, err := report.LoadAll(reportsDir)

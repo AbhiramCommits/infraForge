@@ -48,11 +48,11 @@ func runVMStart(ctx context.Context, cmd *cobra.Command, opts *Options, backendN
 
 	cfg, err := config.Load(opts.Config)
 	if err != nil {
-		return fmt.Errorf("load config: %w", err)
+		return exitErrorf(ExitConfigError, "load config: %w", err)
 	}
 	host, err := findHost(cfg, name)
 	if err != nil {
-		return err
+		return exitErrorf(ExitConfigError, "%w", err)
 	}
 	backend, err := virt.New(backendName)
 	if err != nil {

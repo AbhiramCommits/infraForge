@@ -56,14 +56,14 @@ func runLimit(ctx context.Context, cmd *cobra.Command, opts *Options, flags limi
 	if flags.cpuMax != "" {
 		v, err := cgroup.ParseCPUPercent(flags.cpuMax)
 		if err != nil {
-			return fmt.Errorf("invalid --cpu-max: %w", err)
+			return exitErrorf(ExitConfigError, "invalid --cpu-max: %w", err)
 		}
 		limits.CPUMax = v
 	}
 	if flags.memoryMax != "" {
 		bytes, err := config.ParseMemory(flags.memoryMax)
 		if err != nil {
-			return fmt.Errorf("invalid --memory-max: %w", err)
+			return exitErrorf(ExitConfigError, "invalid --memory-max: %w", err)
 		}
 		limits.MemoryMax = bytes
 	}
@@ -183,9 +183,9 @@ func runLimit(ctx context.Context, cmd *cobra.Command, opts *Options, flags limi
 
 	switch {
 	case oomKills > 0:
-		return fmt.Errorf("command was OOM-killed in cgroup %s", ctrl.Path(flags.name))
+		return exitErrorf(ExitLimitViolation, "command was OOM-killed in cgroup %s", ctrl.Path(flags.name))
 	case runErr != nil:
-		return fmt.Errorf("limited command failed: %w", runErr)
+		return exitErrorf(ExitLimitViolation, "limited command failed: %w", runErr)
 	}
 	return nil
 }
