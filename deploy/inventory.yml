@@ -1,8 +1,27 @@
 all:
-  hosts:
-    web-01:
-      ansible_host: 192.0.2.10
-      ansible_user: root
-    db-01:
-      ansible_host: 192.0.2.11
-      ansible_user: root
+    hosts:
+        db-01:
+            ansible_host: 127.0.0.1
+            ansible_port: 22
+            ansible_user: infraforge
+            ansible_password: infraforge
+            ansible_host_key_checking: false
+            node_image: debian-12
+            node_cpu_max: 25
+            node_memory_max: 1G
+            node_pids_max: 256
+        web-01:
+            ansible_host: 127.0.0.1
+            ansible_port: 22
+            ansible_user: infraforge
+            ansible_password: infraforge
+            ansible_host_key_checking: false
+            node_image: ubuntu-24.04
+            node_cpu_max: 50
+            node_memory_max: 256M
+            node_pids_max: 128
+    children:
+        nodes:
+            hosts:
+                db-01: {}
+                web-01: {}

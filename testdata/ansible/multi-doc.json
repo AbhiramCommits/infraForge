@@ -1,0 +1,70 @@
+{
+  "plays": [
+    {
+      "play": {
+        "name": "Ensure containers"
+      },
+      "tasks": [
+        {
+          "task": {
+            "name": "Ensure container web-01 is running"
+          },
+          "hosts": {
+            "localhost": {"changed": true}
+          }
+        }
+      ]
+    }
+  ],
+  "stats": {
+    "localhost": {
+      "changed": 1,
+      "failures": 0,
+      "ignored": 0,
+      "ok": 1,
+      "rescued": 0,
+      "skipped": 0,
+      "unreachable": 0
+    }
+  }
+}
+{
+  "plays": [
+    {
+      "play": {
+        "name": "Configure nodes"
+      },
+      "tasks": [
+        {
+          "task": {
+            "name": "Install base packages"
+          },
+          "hosts": {
+            "web-01": {"changed": true},
+            "db-01": {"changed": false}
+          }
+        }
+      ]
+    }
+  ],
+  "stats": {
+    "web-01": {
+      "changed": 2,
+      "failures": 0,
+      "ignored": 0,
+      "ok": 4,
+      "rescued": 0,
+      "skipped": 0,
+      "unreachable": 0
+    },
+    "db-01": {
+      "changed": 1,
+      "failures": 0,
+      "ignored": 0,
+      "ok": 4,
+      "rescued": 0,
+      "skipped": 0,
+      "unreachable": 0
+    }
+  }
+}

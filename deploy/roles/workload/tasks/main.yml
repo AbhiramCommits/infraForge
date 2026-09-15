@@ -1,0 +1,41 @@
+---
+- name: Install supervisor
+  ansible.builtin.apt:
+    name: supervisor
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Deploy the CPU and memory burner script
+  ansible.builtin.copy:
+    src: burn.py
+    dest: /usr/local/bin/infraforge-burn.py
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Configure the burner program
+  ansible.builtin.template:
+    src: infraforge-burn.conf.j2
+    dest: /etc/supervisor/conf.d/infraforge-burn.conf
+    owner: root
+    group: root
+    mode: "0644"
+  register: burner_conf
+
+- name: Ensure supervisord is running
+  ansible.builtin.service:
+    name: supervisor
+    state: started
+    enabled: true
+
+- name: Start the burner via supervisor
+  community.general.supervisorctl:
+    name: infraforge-burn
+    state: present
+
+- name: Restart the burner after configuration changes
+  community.general.supervisorctl:
+    name: infraforge-burn
+    state: restarted
+  when: burner_conf.changed

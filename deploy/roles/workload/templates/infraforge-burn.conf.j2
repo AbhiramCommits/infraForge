@@ -1,0 +1,7 @@
+[program:infraforge-burn]
+command=/usr/bin/python3 /usr/local/bin/infraforge-burn.py
+environment=BURN_MEM_MB="{{ burn_mem_mb | default(64) }}",BURN_CPUS="{{ burn_cpus | default(1) }}"
+autostart=true
+autorestart=true
+redirect_stderr=true
+stdout_logfile=/var/log/infraforge-burn.log

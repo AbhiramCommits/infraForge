@@ -1,0 +1,82 @@
+{
+  "plays": [
+    {
+      "play": {
+        "name": "Configure nodes"
+      },
+      "tasks": [
+        {
+          "task": {
+            "name": "Gathering Facts"
+          },
+          "hosts": {
+            "web-01": {"changed": false},
+            "db-01": {"changed": false}
+          }
+        },
+        {
+          "task": {
+            "name": "Install base packages"
+          },
+          "hosts": {
+            "web-01": {"changed": true, "msg": "4 packages installed"},
+            "db-01": {"changed": false, "msg": "All packages are already installed"}
+          }
+        },
+        {
+          "task": {
+            "name": "Deploy the CPU and memory burner script"
+          },
+          "hosts": {
+            "web-01": {"changed": true},
+            "db-01": {"changed": true}
+          }
+        },
+        {
+          "task": {
+            "name": "Start the burner via supervisor"
+          },
+          "hosts": {
+            "web-01": {"changed": true},
+            "db-01": {"changed": false}
+          }
+        }
+      ]
+    },
+    {
+      "play": {
+        "name": "Configure workload"
+      },
+      "tasks": [
+        {
+          "task": {
+            "name": "Install base packages"
+          },
+          "hosts": {
+            "web-01": {"changed": false}
+          }
+        }
+      ]
+    }
+  ],
+  "stats": {
+    "web-01": {
+      "changed": 3,
+      "failures": 0,
+      "ignored": 0,
+      "ok": 5,
+      "rescued": 0,
+      "skipped": 0,
+      "unreachable": 0
+    },
+    "db-01": {
+      "changed": 1,
+      "failures": 0,
+      "ignored": 0,
+      "ok": 5,
+      "rescued": 0,
+      "skipped": 0,
+      "unreachable": 0
+    }
+  }
+}

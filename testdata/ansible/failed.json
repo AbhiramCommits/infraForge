@@ -1,0 +1,34 @@
+{
+  "plays": [
+    {
+      "play": {
+        "name": "Configure nodes"
+      },
+      "tasks": [
+        {
+          "task": {
+            "name": "Install base packages"
+          },
+          "hosts": {
+            "web-01": {
+              "changed": false,
+              "failed": true,
+              "msg": "apt-get install failed: E: Broken packages"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "stats": {
+    "web-01": {
+      "changed": 0,
+      "failures": 1,
+      "ignored": 0,
+      "ok": 1,
+      "rescued": 0,
+      "skipped": 0,
+      "unreachable": 0
+    }
+  }
+}

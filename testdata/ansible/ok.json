@@ -1,0 +1,57 @@
+{
+  "plays": [
+    {
+      "play": {
+        "name": "Configure nodes"
+      },
+      "tasks": [
+        {
+          "task": {
+            "name": "Gathering Facts"
+          },
+          "hosts": {
+            "web-01": {
+              "changed": false,
+              "ansible_facts": {
+                "discovered_interpreter_python": "/usr/bin/python3"
+              }
+            }
+          }
+        },
+        {
+          "task": {
+            "name": "Install base packages"
+          },
+          "hosts": {
+            "web-01": {
+              "changed": false,
+              "msg": "All packages are already installed"
+            }
+          }
+        },
+        {
+          "task": {
+            "name": "Render node configuration"
+          },
+          "hosts": {
+            "web-01": {
+              "changed": false,
+              "msg": "OK"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "stats": {
+    "web-01": {
+      "changed": 0,
+      "failures": 0,
+      "ignored": 0,
+      "ok": 4,
+      "rescued": 0,
+      "skipped": 0,
+      "unreachable": 0
+    }
+  }
+}

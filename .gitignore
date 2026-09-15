@@ -1,6 +1,9 @@
 # Build output
 /bin/
 
+# Generated files (written by `infraforge provision`)
+/deploy/inventory.yml
+
 # Go
 *.test
 *.out

@@ -1,0 +1,14 @@
+{
+  "plays": [],
+  "stats": {
+    "db-01": {
+      "changed": 0,
+      "failures": 0,
+      "ignored": 0,
+      "ok": 0,
+      "rescued": 0,
+      "skipped": 0,
+      "unreachable": 1
+    }
+  }
+}

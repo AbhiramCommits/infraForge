@@ -1,0 +1,6 @@
+# Managed by infraforge — do not edit by hand.
+node_name: {{ inventory_hostname }}
+node_image: {{ node_image | default('ubuntu:22.04') }}
+cpu_max_percent: {{ node_cpu_max | default(0) }}
+memory_max: {{ node_memory_max | default('') }}
+pids_max: {{ node_pids_max | default(0) }}

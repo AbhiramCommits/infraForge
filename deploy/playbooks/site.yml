@@ -1,0 +1,40 @@
+---
+- name: Build node container images
+  hosts: localhost
+  gather_facts: false
+  vars:
+    node_images: "{{ groups['nodes'] | map('extract', hostvars, 'node_image') | unique }}"
+  tasks:
+    - name: Build the node image for {{ item }}
+      community.docker.docker_image:
+        name: "infraforge/node:{{ item | regex_replace('[:/]', '-') }}"
+        source: build
+        state: present
+        build:
+          path: "{{ playbook_dir }}/.."
+          dockerfile: deploy/Dockerfile.node
+          args:
+            BASE_IMAGE: "{{ item }}"
+      loop: "{{ node_images }}"
+
+- name: Ensure node containers are running
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Ensure container {{ item }} is running
+      community.docker.docker_container:
+        name: "{{ item }}"
+        image: "infraforge/node:{{ hostvars[item].node_image | regex_replace('[:/]', '-') }}"
+        state: started
+        restart_policy: unless-stopped
+        hostname: "{{ item }}"
+        published_ports:
+          - "127.0.0.1:{{ hostvars[item].ansible_port }}:22"
+      loop: "{{ groups['nodes'] }}"
+
+- name: Configure nodes
+  hosts: nodes
+  become: true
+  roles:
+    - base
+    - workload

@@ -1,0 +1,6 @@
+---
+node_user: infraforge
+node_packages:
+  - python3
+  - curl
+  - procps
