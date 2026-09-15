@@ -1,0 +1,10 @@
+# Build output
+/bin/
+
+# Go
+*.test
+*.out
+coverage.*
+
+# OS
+.DS_Store

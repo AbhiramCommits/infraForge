@@ -1,0 +1,12 @@
+hosts:
+  - name: db-01
+    image: debian-12
+    ssh_port: 2222
+    limits:
+      cpu_max: 25.5
+      memory_max: 512M
+      pids_max: 64
+  - name: web-01
+    image: ubuntu-24.04
+    limits:
+      memory_max: 1G
